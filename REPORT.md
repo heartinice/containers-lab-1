@@ -1,0 +1,41 @@
+# Отчет по практической работе №1
+
+### Студент: Игнатьева Мария Сергеевна
+### Группа: БСБО-16-23
+### Дата выполнения: 12.03.26
+### Github: https://github.com/heartinice/containers-lab-1
+
+### 1. Выполненные команды Docker
+
+#### 1.1 Работа с образами
+
+
+![](screenshots/1.png)  
+![](screenshots/2.png)   
+
+#### 1.2 Работа с контейнерами
+
+![](screenshots/3.png)  
+![](screenshots/4.png)  
+![](screenshots/5.png)  
+
+
+#### 1.3 Работа с томами
+
+![](screenshots/6.png)  
+![](screenshots/7.png)  
+![](screenshots/8.png)  
+
+
+### 2. Скриншоты работающего приложения
+
+#### 2.1 Главная страница
+
+![Главная страница](screenshots/page.png)
+
+#### 2.2 Список пользователей в БД
+
+![PostgreSQL](screenshots/users.png)
+
+
+

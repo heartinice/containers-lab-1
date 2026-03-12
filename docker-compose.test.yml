@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: myapp_test
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY}/app:sha-${SHORT_SHA}
+    environment:
+      DB_HOST: postgres
+      DB_PASSWORD: secret
+      DB_NAME: myapp_test
+      PORT: "8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - test-network
+
+  nginx:
+    image: ghcr.io/${GITHUB_REPOSITORY}/nginx:sha-${SHORT_SHA}
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    networks:
+      - test-network
+
+networks:
+  test-network: {}
