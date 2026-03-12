@@ -10,6 +10,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -77,11 +78,16 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          # Приведение имени репозитория к нижнему регистру (обязательно для GHCR)
+          # Приведение к нижнему регистру
           export GITHUB_REPOSITORY=$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
           export SHORT_SHA=${GITHUB_SHA::7}
           
           docker compose -f docker-compose.test.yml up -d
-          sleep 20
+
+          sleep 50
+
+          docker ps -a
+
           curl -f http://localhost/api/health || (docker compose -f docker-compose.test.yml logs && exit 1)
+          
           docker compose -f docker-compose.test.yml down
