@@ -26,6 +26,12 @@ services:
         condition: service_healthy
     networks:
       - test-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      
 
   nginx:
     image: ghcr.io/${GITHUB_REPOSITORY}/nginx:sha-${SHORT_SHA}
