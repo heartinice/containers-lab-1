@@ -60,7 +60,7 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
         }
         location /health {
-          proxy_pass http://backend/health;
+          proxy_pass http://backend/api/health;
         }
       }
     }
@@ -74,6 +74,7 @@ data:
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="UTF-8">
       <title>Kubernetes Demo</title>
       <style>
         body { font-family: Arial; margin: 40px; background: #f0f4f8; }

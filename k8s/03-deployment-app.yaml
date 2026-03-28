@@ -6,15 +6,10 @@ metadata:
     app: go-app
     lab: lab2
 spec:
-  replicas: 2
+  replicas: 5
   selector:
     matchLabels:
       app: go-app
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -37,22 +32,15 @@ spec:
           value: "secret"
         - name: DB_NAME
           value: "myapp"
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "250m"
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
         readinessProbe:
           httpGet:
-            path: /health
+            path: /api/health
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /health
+            path: /api/health
             port: 8080
           initialDelaySeconds: 15
           periodSeconds: 20
