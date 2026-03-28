@@ -18,39 +18,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 1. Быстрая оффлайн-проверка схем через kubeval (как в методичке)
       - name: Install kubeval
         run: |
           wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar xf kubeval-linux-amd64.tar.gz
           sudo cp kubeval /usr/local/bin
 
-      - name: Validate Kubernetes manifests (kubeval)
-        run: |
-          # kubeval — лучший инструмент для оффлайн-проверки схем
-          kubeval --strict --ignore-missing-schemas k8s/*.yaml
+      - name: Validate with kubeval
+        run: kubeval --strict --ignore-missing-schemas k8s/*.yaml
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v4
+      # 2. ПОДНИМАЕМ КЛАСТЕР (Решение твоей проблемы)
+      - name: Create local cluster (Kind)
+        uses: helm/kind-action@v1.10.0
         with:
-          version: 'v1.28.0'
+          cluster_name: kind
 
-      - name: Dry-run apply (kubectl)
+      # 3. Теперь kubectl увидит кластер, и dry-run сработает без ошибок
+      - name: Dry-run apply
         run: |
-          # Создаем временный конфиг в изолированном месте
-          export KUBECONFIG=$HOME/.kube/offline_config
-          
-          # Настраиваем фиктивный кластер на порт, который гарантированно не ответит
-          kubectl config set-cluster offline --server=http://127.0.0.1:1
-          kubectl config set-context offline --cluster=offline
-          kubectl config use-context offline
-
           for file in k8s/*.yaml; do
             echo "Validating $file"
-            # --dry-run=client делает проверку локальной
-            # --validate=false запрещает kubectl обращаться к серверу за схемами
-            kubectl apply --dry-run=client --validate=false -f $file
+            # Теперь можно использовать даже --dry-run=server для максимальной точности
+            kubectl apply --dry-run=server -f $file
           done
 
+      # 4. Линтер YAML (как в методичке)
       - name: Lint YAML files
         uses: ibiqlik/action-yamllint@v3
         with:
