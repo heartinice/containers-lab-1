@@ -9,7 +9,6 @@ on:
       - 'k8s/**/*.yaml'
 
 env:
-  # Принудительно используем Node.js 24 для всех экшенов
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -18,26 +17,30 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Install kubeval
         run: |
           wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar xf kubeval-linux-amd64.tar.gz
           sudo cp kubeval /usr/local/bin
-      - name: Validate Kubernetes manifests
+
+      - name: Validate Kubernetes manifests (kubeval)
         run: |
           kubeval --strict --ignore-missing-schemas k8s/*.yaml
+
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
         with:
           version: 'v1.28.0'
-      - name: Dry-run apply
+
+      - name: Dry-run apply (kubectl)
         run: |
           for file in k8s/*.yaml; do
             echo "Validating $file"
-            # Флаг --dry-run=client делает проверку локальной
-            # Флаг --validate=false запрещает обращение к API-серверу для проверки схем
-            kubectl apply --dry-run=client --validate=false -f $file
+            # Исправленный синтаксис: двойное тире и знак равенства
+            kubectl apply --dry-run=client -f $file
           done
+
       - name: Lint YAML files
         uses: ibiqlik/action-yamllint@v3
         with:
