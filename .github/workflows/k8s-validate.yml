@@ -37,8 +37,8 @@ jobs:
         run: |
           for file in k8s/*.yaml; do
             echo "Validating $file"
-            # Исправленный синтаксис: двойное тире и знак равенства
-            kubectl apply --dry-run=client -f $file
+            # --validate=false отключает попытку kubectl связаться с кластером для проверки схем
+            kubectl apply --dry-run=client --validate=false -f $file
           done
 
       - name: Lint YAML files
