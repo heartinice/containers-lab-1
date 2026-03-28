@@ -26,6 +26,7 @@ jobs:
 
       - name: Validate Kubernetes manifests (kubeval)
         run: |
+          # kubeval — лучший инструмент для оффлайн-проверки схем
           kubeval --strict --ignore-missing-schemas k8s/*.yaml
 
       - name: Install kubectl
@@ -35,9 +36,13 @@ jobs:
 
       - name: Dry-run apply (kubectl)
         run: |
+          # Создаем пустой временный конфиг, чтобы kubectl не искал localhost
+          touch empty_kubeconfig
+          export KUBECONFIG=./empty_kubeconfig
+          
           for file in k8s/*.yaml; do
             echo "Validating $file"
-            # --validate=false отключает попытку kubectl связаться с кластером для проверки схем
+            # Используем --validate=false, чтобы не лезть за схемой на сервер
             kubectl apply --dry-run=client --validate=false -f $file
           done
 
