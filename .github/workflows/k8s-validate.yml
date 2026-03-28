@@ -36,13 +36,15 @@ jobs:
 
       - name: Dry-run apply (kubectl)
         run: |
-          # Создаем пустой временный конфиг, чтобы kubectl не искал localhost
-          touch empty_kubeconfig
-          export KUBECONFIG=./empty_kubeconfig
-          
+          # 1. Создаем фиктивный контекст, чтобы kubectl не искал localhost
+          kubectl config set-cluster dummy-cluster --server=https://1.1.1.1 --insecure-skip-tls-verify
+          kubectl config set-context dummy-context --cluster=dummy-cluster
+          kubectl config use-context dummy-context
+
+          # 2. Проходим циклом по файлам
           for file in k8s/*.yaml; do
             echo "Validating $file"
-            # Используем --validate=false, чтобы не лезть за схемой на сервер
+            # Используем --validate=false, чтобы kubectl не пытался скачать схемы с сервера
             kubectl apply --dry-run=client --validate=false -f $file
           done
 
