@@ -36,15 +36,18 @@ jobs:
 
       - name: Dry-run apply (kubectl)
         run: |
-          # 1. Создаем фиктивный контекст, чтобы kubectl не искал localhost
-          kubectl config set-cluster dummy-cluster --server=https://1.1.1.1 --insecure-skip-tls-verify
-          kubectl config set-context dummy-context --cluster=dummy-cluster
-          kubectl config use-context dummy-context
+          # Создаем временный конфиг в изолированном месте
+          export KUBECONFIG=$HOME/.kube/offline_config
+          
+          # Настраиваем фиктивный кластер на порт, который гарантированно не ответит
+          kubectl config set-cluster offline --server=http://127.0.0.1:1
+          kubectl config set-context offline --cluster=offline
+          kubectl config use-context offline
 
-          # 2. Проходим циклом по файлам
           for file in k8s/*.yaml; do
             echo "Validating $file"
-            # Используем --validate=false, чтобы kubectl не пытался скачать схемы с сервера
+            # --dry-run=client делает проверку локальной
+            # --validate=false запрещает kubectl обращаться к серверу за схемами
             kubectl apply --dry-run=client --validate=false -f $file
           done
 
