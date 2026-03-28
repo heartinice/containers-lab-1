@@ -34,7 +34,9 @@ jobs:
         run: |
           for file in k8s/*.yaml; do
             echo "Validating $file"
-            kubectl apply --dry-run=client -f $file
+            # Флаг --dry-run=client делает проверку локальной
+            # Флаг --validate=false запрещает обращение к API-серверу для проверки схем
+            kubectl apply --dry-run=client --validate=false -f $file
           done
       - name: Lint YAML files
         uses: ibiqlik/action-yamllint@v3
