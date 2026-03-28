@@ -1,0 +1,1 @@
+2026/03/28 13:04:49 Error creating table:dial tcp: lookup postgres-service on 10.96.0.10:53: no such host

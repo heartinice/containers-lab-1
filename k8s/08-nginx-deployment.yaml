@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+    lab: lab2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: nginx-html
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: index.html
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: nginx-html
+        configMap:
+          name: nginx-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |
+    events {
+      worker_connections 1024;
+    }
+    http {
+      upstream backend {
+        server go-app-service:8080;
+      }
+      server {
+        listen 80;
+        location / {
+          root /usr/share/nginx/html;
+          index index.html;
+        }
+        location /api/ {
+          proxy_pass http://backend;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+        }
+        location /health {
+          proxy_pass http://backend/health;
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Kubernetes Demo</title>
+      <style>
+        body { font-family: Arial; margin: 40px; background: #f0f4f8; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #326ce5; }
+        .pod-info { background: #e8f0fe; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .pod-info pre { margin: 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Kubernetes Demo Application</h1>
+        <p>Это приложение работает в Kubernetes кластере Minikube</p>
+        <div class="pod-info">
+          <strong>Информация о поде:</strong>
+          <pre id="pod-details">Загрузка...</pre>
+        </div>
+        <h2>Пользователи из БД: </h2>
+        <ul id="users-list"></ul>
+        <script>
+          async function loadPodInfo() {
+            const response = await fetch('/api/health');
+            const data = await response.json();
+            document.getElementById('pod-details').textContent = 
+              'Hostname: ' + window.location.hostname + '\n' +
+              'Status: ' + data.status + '\n' +
+              'Time: ' + new Date().toLocaleString();
+          }
+          async function loadUsers() {
+            const response = await fetch('/api/users');
+            const users = await response.json();
+            const list = document.getElementById('users-list');
+            list.innerHTML = '';
+            users.forEach(user => {
+              const li = document.createElement('li');
+              li.textContent = user.name + ' (ID: ' + user.id + ')';
+              list.appendChild(li);
+            });
+          }
+          loadPodInfo();
+          loadUsers();
+          setInterval(loadPodInfo, 5000);
+        </script>
+      </div>
+    </body>
+    </html>

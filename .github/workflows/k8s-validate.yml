@@ -1,0 +1,38 @@
+name: Validate Kubernetes Manifests
+on:
+  push:
+    paths:
+      - 'k8s/**/*.yaml'
+      - '.github/workflows/k8s-validate.yml'
+  pull_request:
+    paths:
+      - 'k8s/**/*.yaml'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install kubeval
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo cp kubeval /usr/local/bin
+      - name: Validate Kubernetes manifests
+        run: |
+          kubeval --strict --ignore-missing-schemas k8s/*.yaml
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+      - name: Dry-run apply
+        run: |
+          for file in k8s/*.yaml; do
+            echo "Validating $file"
+            kubectl apply --dry-run=client -f $file
+          done
+      - name: Lint YAML files
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: k8s/
+          config_file: .yamllint.yml
